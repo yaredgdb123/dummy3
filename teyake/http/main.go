@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"os"
 	"teyake/entity"
 
 	ansRepoImp "teyake/answer/repository"
@@ -34,10 +35,10 @@ func createTables(dbconn *gorm.DB) []error {
 }
 
 func main() {
-	dbconn, err := gorm.Open("postgres", util.DBConnectString)
+	dbconn, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
 	defer dbconn.Close()
-	templ := template.Must(template.New("main").Funcs(util.AvailableFuncMaps).ParseGlob("../../ui/templates/*"))
-	fs := http.FileServer(http.Dir("../../ui/assets"))
+	templ := template.Must(template.New("main").Funcs(util.AvailableFuncMaps).ParseGlob("ui/templates/*"))
+	fs := http.FileServer(http.Dir("ui/assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	if err != nil {
@@ -150,6 +151,6 @@ func main() {
 	http.HandleFunc("/signup", userHandler.SignUp)
 
 	http.Handle("/logout", userHandler.Authenticated(http.HandlerFunc(userHandler.Logout)))
-	//port := os.Getenv("PORT")
-	http.ListenAndServe(":8181", nil)
+	port := os.Getenv("PORT")
+	http.ListenAndServe(":"+port, nil)
 }
